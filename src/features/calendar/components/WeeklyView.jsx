@@ -7,6 +7,9 @@ import {
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import EventCard from './EventCard';
+import { mockEvents } from '../data/mockEvents';
+import { calculateEventStyle, getEventDayIndex } from '../utils/gridHelpers';
 
 export default function WeeklyView() {
   // Generar los 7 días de la semana actual (empezando el lunes)
@@ -99,16 +102,33 @@ export default function WeeklyView() {
                 {/* Day Cells */}
                 {weekDays.map((day, dayIdx) => {
                   const isTodayDay = isToday(day);
+                  
+                  // Filtrar eventos para este día y esta hora
+                  const dayEvents = mockEvents.filter(event => {
+                    const eventDayIdx = getEventDayIndex(event.startTime, weekDays);
+                    return eventDayIdx === dayIdx;
+                  });
+                  
                   return (
                     <div
                       key={`${hour}-${dayIdx}`}
                       className={cn(
-                        'border-r border-b border-gray-200 relative',
+                        'border-r border-b border-gray-200 relative z-0',
                         'hover:bg-indigo-50/30 transition-colors cursor-pointer',
                         isTodayDay && 'bg-indigo-50/10'
                       )}
                     >
-                      {/* Empty slot - aquí irán los eventos */}
+                      {/* Renderizar eventos solo en la primera celda del día */}
+                      {hour === hours[0] && dayEvents.map(event => {
+                        const style = calculateEventStyle(event.startTime, event.endTime);
+                        return (
+                          <EventCard
+                            key={event.id}
+                            event={event}
+                            style={style}
+                          />
+                        );
+                      })}
                     </div>
                   );
                 })}
