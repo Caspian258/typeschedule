@@ -1,29 +1,29 @@
-# ⏰ TimeWeave - Optimizador Biológico para Estudiantes
+# TimeWeave - Optimizador Biológico para Estudiantes
 
-> 🚀 **v1.0.0 Alpha** - MVP Completo
+> **v1.0.0 Alpha** - MVP Completo
 
 Un calendario inteligente que sincroniza tu agenda académica con tus ritmos biológicos naturales para maximizar tu rendimiento y bienestar.
 
 ---
 
-## 🧬 ¿Qué es TimeWeave?
+## ¿Qué es TimeWeave?
 
 TimeWeave es una aplicación web que analiza tu **cronotipo** (León, Oso, Lobo, Delfín) y genera automáticamente sugerencias de estudio optimizadas para tus momentos de mayor energía mental. Basado en ciencia del sueño y ritmos ultradianos, te ayuda a estudiar más inteligentemente, no más duro.
 
-### ✨ Features Clave
+### Features Clave
 
-- **🤖 Auto-Scheduling Inteligente**: Algoritmo heurístico que detecta huecos libres y propone bloques de estudio en tus picos de energía
-- **📊 Sincronización con Cronotipos**: 4 perfiles biológicos (León, Oso, Lobo, Delfín) con horarios peak personalizados
-- **⏰ Calendario Pixel-Perfect**: Grid de 24 horas con alineación matemática exacta (CSS background + offset calibration)
-- **🌙 Zonas de Sueño Inteligentes**: Respeta ciclos de 90 minutos y calcula bedtime óptimo
-- **🎯 Vista Semanal Sticky**: Header que permanece visible al hacer scroll con indicador del día actual
-- **⚡ Tiempo Real**: Línea roja actualizada cada minuto mostrando la hora exacta
-- **✅ Gestión de Eventos**: CRUD completo (crear, editar, confirmar, eliminar) con modal intuitivo
-- **🎨 UI Moderna**: TailwindCSS con gradientes, shadows, y transiciones suaves
+- **Auto-Scheduling Inteligente**: Algoritmo heurístico que detecta huecos libres y propone bloques de estudio en tus picos de energía
+- **Sincronización con Cronotipos**: 4 perfiles biológicos (León, Oso, Lobo, Delfín) con horarios peak personalizados
+- **Calendario Pixel-Perfect**: Grid de 24 horas con alineación matemática exacta (CSS background + offset calibration)
+- **Zonas de Sueño Inteligentes**: Respeta ciclos de 90 minutos y calcula bedtime óptimo
+- **Vista Semanal Sticky**: Header que permanece visible al hacer scroll con indicador del día actual
+- **Tiempo Real**: Línea roja actualizada cada minuto mostrando la hora exacta
+- **Gestión de Eventos**: CRUD completo (crear, editar, confirmar, eliminar) con modal intuitivo
+- **UI Moderna**: TailwindCSS con gradientes, shadows, y transiciones suaves
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Tecnología | Versión | Propósito |
 |------------|---------|-----------|
@@ -37,7 +37,7 @@ TimeWeave es una aplicación web que analiza tu **cronotipo** (León, Oso, Lobo,
 
 ---
 
-## 🚀 Instalación Local
+## Instalación Local
 
 ### Prerrequisitos
 
@@ -58,7 +58,7 @@ TimeWeave es una aplicación web que analiza tu **cronotipo** (León, Oso, Lobo,
    npm install
    ```
 
-3. **Configurar Firebase** ⚠️ **CRÍTICO**
+3. **Configurar Firebase** (CRÍTICO)
    
    Crea un archivo `.env.local` en la raíz del proyecto con tus credenciales de Firebase:
    
@@ -72,7 +72,7 @@ TimeWeave es una aplicación web que analiza tu **cronotipo** (León, Oso, Lobo,
    VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
    ```
    
-   > 📝 **Nota**: Estos valores se obtienen de la consola de Firebase → Project Settings → General → Your apps → SDK setup and configuration
+   > **Nota**: Estos valores se obtienen de la consola de Firebase → Project Settings → General → Your apps → SDK setup and configuration
 
 4. **Ejecutar en desarrollo**
    ```bash
@@ -89,7 +89,7 @@ TimeWeave es una aplicación web que analiza tu **cronotipo** (León, Oso, Lobo,
 
 ---
 
-## 📁 Arquitectura del Proyecto
+## Arquitectura del Proyecto
 
 ```
 src/
@@ -116,16 +116,16 @@ src/
 
 ---
 
-## 🧬 Algoritmo de Scheduling
+## Algoritmo de Scheduling
 
 ### Cronotipos Soportados
 
 | Cronotipo | Horario Peak | Características |
 |-----------|--------------|-----------------|
-| 🦁 **León** | 08:00 - 12:00 | Madrugadores extremos, pico matutino |
-| 🐻 **Oso** | 10:00 - 14:00 | Mayoría de la población, ritmo solar |
-| 🐺 **Lobo** | 16:00 - 21:00 | Noctámbulos, creatividad vespertina |
-| 🐬 **Delfín** | 10:00 - 12:00 | Sueño ligero, focus matutino corto |
+| **León** | 08:00 - 12:00 | Madrugadores extremos, pico matutino |
+| **Oso** | 10:00 - 14:00 | Mayoría de la población, ritmo solar |
+| **Lobo** | 16:00 - 21:00 | Noctámbulos, creatividad vespertina |
+| **Delfín** | 10:00 - 12:00 | Sueño ligero, focus matutino corto |
 
 ### Heurística de Sugerencias
 
@@ -139,7 +139,7 @@ src/
 
 ---
 
-## 🎨 Características de UI/UX
+## Características de UI/UX
 
 ### Grid System Avanzado
 
@@ -161,16 +161,16 @@ src/
 
 ---
 
-## 🔐 Seguridad
+## Seguridad
 
-- ✅ `.env.local` en `.gitignore` (API keys nunca en el repo)
-- ✅ Firebase Auth con Google OAuth (no passwords custom)
-- ✅ Firestore Rules configuradas para acceso por userId
-- ✅ HTTPS obligatorio en producción (Vercel)
+- `.env.local` en `.gitignore` (API keys nunca en el repo)
+- Firebase Auth con Google OAuth (no passwords custom)
+- Firestore Rules configuradas para acceso por userId
+- HTTPS obligatorio en producción (Vercel)
 
 ---
 
-## 🚢 Deployment en Vercel
+## Deployment en Vercel
 
 1. **Conectar repositorio**: Importa desde GitHub en Vercel dashboard
 2. **Variables de entorno**: Agrega las mismas keys de `.env.local` en Vercel → Project Settings → Environment Variables
@@ -180,13 +180,13 @@ src/
    - Output Directory: `dist`
 4. **Deploy**: Vercel hace build automático en cada push a `main`
 
-> 📝 El archivo `vercel.json` ya está configurado para manejar React Router correctamente
+> El archivo `vercel.json` ya está configurado para manejar React Router correctamente
 
 ---
 
-## 📊 Estado del Proyecto
+## Estado del Proyecto
 
-### ✅ Completado (v1.0.0 Alpha)
+### Completado (v1.0.0 Alpha)
 
 - [x] Autenticación con Google
 - [x] Perfil de cronotipo y preferencias
@@ -198,7 +198,7 @@ src/
 - [x] Sincronización con Firestore
 - [x] UI responsive y moderna
 
-### 🔮 Roadmap (Futuras Versiones)
+### Roadmap (Futuras Versiones)
 
 - [ ] Vista mensual y diaria
 - [ ] Estadísticas de productividad
@@ -211,7 +211,7 @@ src/
 
 ---
 
-## 🤝 Contribuir
+## Contribuir
 
 Este proyecto es parte de un MVP académico. Pull requests son bienvenidos para:
 
@@ -230,19 +230,19 @@ Este proyecto es parte de un MVP académico. Pull requests son bienvenidos para:
 
 ---
 
-## 📄 Licencia
+## Licencia
 
 MIT License - Libre de usar para proyectos académicos y comerciales.
 
 ---
 
-## 👨‍💻 Autor
+## Autor
 
 **Caspian** - [GitHub](https://github.com/Caspian258)
 
 ---
 
-## 🙏 Agradecimientos
+## Agradecimientos
 
 - Investigación en cronobiología: Dr. Michael Breus (The Power of When)
 - Algoritmos de scheduling: Principios de Operating Systems y CPU Scheduling
@@ -250,4 +250,4 @@ MIT License - Libre de usar para proyectos académicos y comerciales.
 
 ---
 
-**🎓 Construido con pasión para estudiantes que quieren optimizar su tiempo sin sacrificar su salud.**
+**Construido con pasión para estudiantes que quieren optimizar su tiempo sin sacrificar su salud.**
