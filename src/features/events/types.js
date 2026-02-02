@@ -21,6 +21,7 @@ export const EVENT_TYPES = {
   STUDY: 'study',
   BIOLOGICAL: 'biological',
   PERSONAL: 'personal',
+  SUGGESTION: 'suggestion',
 };
 
 /**
@@ -56,5 +57,11 @@ export const EVENT_STYLES = {
     border: 'border-amber-500',
     text: 'text-amber-700',
     icon: '⭐',
+  },
+  suggestion: {
+    bg: 'bg-purple-50',
+    border: 'border-purple-400',
+    text: 'text-purple-600',
+    icon: '💡',
   },
 };

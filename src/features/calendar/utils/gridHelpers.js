@@ -6,9 +6,9 @@ import { differenceInMinutes, getHours, getMinutes } from 'date-fns';
 const HOUR_HEIGHT = 64;
 
 /**
- * Hora de inicio del grid (5:00 AM)
+ * Hora de inicio del grid (00:00 - formato 24h)
  */
-const GRID_START_HOUR = 5;
+const GRID_START_HOUR = 0;
 
 /**
  * Calcula el estilo de posición y tamaño para un evento en el grid

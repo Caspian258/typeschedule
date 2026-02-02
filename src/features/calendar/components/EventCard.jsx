@@ -1,13 +1,45 @@
 import { cn } from '@/lib/utils';
 import { EVENT_STYLES } from '@/features/events/types';
 import { formatEventTime } from '../utils/gridHelpers';
+import { Check, X } from 'lucide-react';
 
-export default function EventCard({ event, style }) {
+export default function EventCard({ event, style, onConfirm, onDelete }) {
   const eventStyle = EVENT_STYLES[event.type] || EVENT_STYLES.personal;
   
   // Determinar si es un evento pequeño (menos de 45 minutos)
   const durationMinutes = (event.endTime - event.startTime) / (1000 * 60);
   const isSmallEvent = durationMinutes < 45;
+
+  // Identificar si es tentativo/sugerencia
+  const isTentative = event.isTentative || event.type === 'suggestion';
+
+  // Manejar confirmación de evento tentativo
+  const handleConfirm = async (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (onConfirm && event.id) {
+      try {
+        await onConfirm(event.id);
+      } catch (error) {
+        console.error('Error al confirmar evento:', error);
+      }
+    }
+  };
+
+  // Manejar eliminación de evento tentativo
+  const handleDelete = async (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (onDelete && event.id) {
+      try {
+        await onDelete(event.id);
+      } catch (error) {
+        console.error('Error al eliminar evento:', error);
+      }
+    }
+  };
 
   return (
     <div
@@ -17,7 +49,8 @@ export default function EventCard({ event, style }) {
         'hover:shadow-md hover:scale-[1.02] hover:z-20',
         eventStyle.bg,
         eventStyle.border,
-        isSmallEvent ? 'px-2 py-1' : 'px-3 py-2'
+        isSmallEvent ? 'px-2 py-1' : 'px-3 py-2',
+        isTentative && 'border-dashed opacity-80 bg-opacity-50'
       )}
       style={{
         top: `${style.top}px`,
@@ -29,12 +62,32 @@ export default function EventCard({ event, style }) {
         <div className="flex items-center gap-1 min-h-0">
           <span className="text-xs">{eventStyle.icon}</span>
           <span className={cn(
-            'font-semibold truncate',
+            'font-semibold truncate flex-1',
             isSmallEvent ? 'text-xs' : 'text-sm',
             eventStyle.text
           )}>
             {event.title}
           </span>
+
+          {/* Botones de acción para eventos tentativos (solo si no es pequeño) */}
+          {isTentative && !isSmallEvent && (
+            <div className="flex items-center gap-1 ml-auto z-20 relative">
+              <button
+                onClick={handleConfirm}
+                className="p-1 rounded hover:bg-green-200 transition-colors cursor-pointer z-20"
+                title="Confirmar evento"
+              >
+                <Check className="w-3 h-3 text-green-600" />
+              </button>
+              <button
+                onClick={handleDelete}
+                className="p-1 rounded hover:bg-red-200 transition-colors cursor-pointer z-20"
+                title="Eliminar evento"
+              >
+                <X className="w-3 h-3 text-red-600" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Horario (solo si hay espacio) */}
@@ -44,24 +97,54 @@ export default function EventCard({ event, style }) {
           </div>
         )}
 
-        {/* Badge de tipo fijo */}
-        {event.isFixed && !isSmallEvent && (
-          <div className="mt-1">
-            <span className={cn(
-              'inline-block px-1.5 py-0.5 text-xs font-medium rounded',
-              eventStyle.text,
-              'bg-white/50'
-            )}>
-              Fijo
-            </span>
+        {/* Badge de tipo */}
+        {!isSmallEvent && (
+          <div className="mt-1 flex items-center gap-2">
+            {event.isFixed && (
+              <span className={cn(
+                'inline-block px-1.5 py-0.5 text-xs font-medium rounded',
+                eventStyle.text,
+                'bg-white/50'
+              )}>
+                Fijo
+              </span>
+            )}
+            {isTentative && (
+              <span className={cn(
+                'inline-block px-1.5 py-0.5 text-xs font-medium rounded',
+                'bg-amber-100 text-amber-700 border border-amber-300'
+              )}>
+                💡 Sugerencia
+              </span>
+            )}
           </div>
         )}
       </div>
 
       {/* Indicador visual para eventos muy pequeños */}
       {isSmallEvent && (
-        <div className={cn('text-xs', eventStyle.text, 'opacity-60')}>
-          {formatEventTime(event.startTime)}
+        <div className="flex items-center justify-between">
+          <div className={cn('text-xs', eventStyle.text, 'opacity-60')}>
+            {formatEventTime(event.startTime)}
+          </div>
+          {isTentative && (
+            <div className="flex gap-0.5 z-20 relative">
+              <button
+                onClick={handleConfirm}
+                className="p-0.5 rounded hover:bg-green-200 cursor-pointer z-20"
+                title="Confirmar"
+              >
+                <Check className="w-2.5 h-2.5 text-green-600" />
+              </button>
+              <button
+                onClick={handleDelete}
+                className="p-0.5 rounded hover:bg-red-200 cursor-pointer z-20"
+                title="Eliminar"
+              >
+                <X className="w-2.5 h-2.5 text-red-600" />
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
