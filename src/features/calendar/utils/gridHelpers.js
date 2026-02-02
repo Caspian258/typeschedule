@@ -1,14 +1,5 @@
 import { differenceInMinutes, getHours, getMinutes } from 'date-fns';
-
-/**
- * Altura de cada hora en el grid (en píxeles)
- */
-const HOUR_HEIGHT = 64;
-
-/**
- * Hora de inicio del grid (00:00 - formato 24h)
- */
-const GRID_START_HOUR = 0;
+import { HOUR_HEIGHT, GRID_START_HOUR, EVENT_OFFSET_Y } from '../constants';
 
 /**
  * Calcula el estilo de posición y tamaño para un evento en el grid
@@ -21,17 +12,15 @@ export function calculateEventStyle(startTime, endTime) {
   const startHour = getHours(startTime);
   const startMinute = getMinutes(startTime);
   
-  // Calcular offset desde el inicio del grid (5:00 AM)
-  const hoursFromGridStart = startHour - GRID_START_HOUR;
-  const minutesFromHourStart = startMinute;
-  
-  // Posición vertical en píxeles
-  const top = (hoursFromGridStart * HOUR_HEIGHT) + (minutesFromHourStart / 60 * HOUR_HEIGHT);
+  // Calcular posición desde el inicio del grid (00:00)
+  // Fórmula: top = (startHour * HOUR_HEIGHT) + ((startMinute / 60) * HOUR_HEIGHT) + EVENT_OFFSET_Y
+  const top = (startHour - GRID_START_HOUR) * HOUR_HEIGHT + (startMinute / 60) * HOUR_HEIGHT + EVENT_OFFSET_Y;
   
   // Duración en minutos
   const durationMinutes = differenceInMinutes(endTime, startTime);
   
   // Altura en píxeles
+  // Fórmula: height = (durationInMinutes / 60) * HOUR_HEIGHT
   const height = (durationMinutes / 60) * HOUR_HEIGHT;
   
   return {

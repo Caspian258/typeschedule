@@ -11,12 +11,14 @@ import { useEffect, useRef } from 'react';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import EventCard from './EventCard';
+import CurrentTimeLine from './CurrentTimeLine';
 import { calculateEventStyle, getEventDayIndex } from '../utils/gridHelpers';
 import { useProfile } from '@/features/profile/hooks/useProfile';
 import { calculateBedtime } from '@/features/profile/services/profileService';
 import { useEvents } from '@/features/events/hooks/useEvents';
+import { HOUR_HEIGHT, HEADER_HEIGHT } from '../constants';
 
-export default function WeeklyView({ events = [] }) {
+export default function WeeklyView({ events = [], onEditEvent }) {
   const { profile } = useProfile();
   const { confirmSuggestion, deleteEvent } = useEvents();
   const scrollContainerRef = useRef(null);
@@ -46,8 +48,8 @@ export default function WeeklyView({ events = [] }) {
         ? parseInt(profile.wakeupTime.split(':')[0]) 
         : 7;
       
-      // Calcular posición de scroll (64px por hora)
-      const scrollPosition = wakeHour * 64;
+      // Calcular posición de scroll usando HOUR_HEIGHT
+      const scrollPosition = wakeHour * HOUR_HEIGHT;
       
       // Scroll suave a la posición
       scrollContainerRef.current.scrollTo({
@@ -81,141 +83,206 @@ export default function WeeklyView({ events = [] }) {
       </div>
 
       {/* Calendar Grid */}
-      <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-200px)]" ref={scrollContainerRef}>
-        <div className="min-w-[800px]">
-          {/* Grid Container */}
+      <div className="overflow-y-auto overflow-x-hidden h-[calc(100vh-200px)] w-full scroll-smooth" ref={scrollContainerRef}>
+        {/* Contenedor con position relative para capas absolutas */}
+        <div className="w-full relative">
+          
+          {/* HEADER STICKY (z-40) - Alineado con Grid del Body */}
           <div 
-            className="grid"
+            className="sticky top-0 z-40 grid w-full bg-white border-b border-gray-200 shadow-sm"
             style={{
-              gridTemplateColumns: 'auto repeat(7, 1fr)',
-              gridTemplateRows: `auto repeat(${hours.length}, 64px)`,
+              gridTemplateColumns: '60px repeat(7, minmax(0, 1fr))',
+              height: `${HEADER_HEIGHT}px`,
             }}
           >
-            {/* Empty corner cell */}
-            <div className="sticky left-0 z-10 bg-gray-50 border-b border-r border-gray-200" />
+            {/* Esquina superior izquierda (60px) - Zona Horaria */}
+            <div className="bg-gray-50 border-r border-gray-200 flex items-center justify-center">
+              <span className="text-xs font-medium text-gray-400">GMT-5</span>
+            </div>
 
-            {/* Day Headers */}
+            {/* Columnas de Días */}
             {weekDays.map((day, idx) => {
               const isTodayDay = isToday(day);
+              const dayNumber = format(day, 'd');
+              const dayName = format(day, 'EEE', { locale: es }).toUpperCase();
+              
               return (
                 <div
                   key={idx}
                   className={cn(
-                    'sticky top-0 z-10 py-4 px-2 text-center border-b border-r border-gray-200',
-                    isTodayDay ? 'bg-indigo-50' : 'bg-gray-50'
+                    'h-full px-3 py-2 flex flex-col items-center justify-center gap-2 border-r border-gray-200 transition-colors',
+                    isTodayDay ? 'bg-blue-50/50' : 'bg-white hover:bg-gray-50/50'
                   )}
                 >
-                  <div className={cn(
-                    'text-xs font-medium uppercase tracking-wide',
-                    isTodayDay ? 'text-indigo-600' : 'text-gray-500'
+                  {/* Nombre del día */}
+                  <span className={cn(
+                    'text-xs font-semibold uppercase tracking-wider',
+                    isTodayDay ? 'text-blue-600' : 'text-gray-500'
                   )}>
-                    {format(day, 'EEE', { locale: es })}
-                  </div>
+                    {dayName}
+                  </span>
+                  
+                  {/* Número del día con indicador circular para "Hoy" */}
                   <div className={cn(
-                    'text-2xl font-bold mt-1',
-                    isTodayDay ? 'text-indigo-600' : 'text-gray-800'
+                    'flex items-center justify-center w-10 h-10 rounded-full text-xl transition-all',
+                    isTodayDay ? 'bg-blue-600 text-white shadow-md font-medium' : 'text-gray-900 font-light'
                   )}>
-                    {format(day, 'd')}
+                    {dayNumber}
                   </div>
-                  {isTodayDay && (
-                    <div className="inline-block mt-1 px-2 py-0.5 text-xs font-medium bg-indigo-600 text-white rounded-full">
-                      Hoy
-                    </div>
-                  )}
                 </div>
               );
             })}
+          </div>
 
-            {/* Time Slots Grid */}
-            {hours.map((hour) => (
-              <div key={hour} className="contents">
-                {/* Hour Label */}
-                <div className="sticky left-0 z-10 bg-gray-50 border-r border-b border-gray-200 px-3 py-2 text-right">
+          {/* Segunda fila: Columna de horas + Columnas de días con CSS Background Grid */}
+          <div className="grid w-full" style={{
+            gridTemplateColumns: '60px repeat(7, minmax(0, 1fr))',
+            gridTemplateRows: '1fr',
+          }}>
+            {/* Columna de Horas (Izquierda) */}
+            <div className="sticky left-0 z-10 bg-gray-50 border-r border-gray-200">
+              {hours.map((hour) => (
+                <div 
+                  key={hour}
+                  className="flex items-start justify-end px-3 pt-2 border-b border-gray-200"
+                  style={{ height: `${HOUR_HEIGHT}px` }}
+                >
                   <span className="text-xs font-medium text-gray-500">
                     {String(hour).padStart(2, '0')}:00
                   </span>
                 </div>
+              ))}
+            </div>
 
-                {/* Day Cells */}
-                {weekDays.map((day, dayIdx) => {
-                  const isTodayDay = isToday(day);
-                  
-                  // Filtrar eventos para este día
-                  const dayEvents = events.filter(event => {
-                    const eventDayIdx = getEventDayIndex(event.startTime, weekDays);
-                    return eventDayIdx === dayIdx;
-                  });
-                  
-                  const isSleepZone = sleepZones?.includes(hour);
-                  const isPeakEnergy = peakEnergyZones?.includes(hour);
-                  
-                  return (
-                    <div
-                      key={`${hour}-${dayIdx}`}
-                      className={cn(
-                        'border-r border-b border-gray-200 relative z-0',
-                        'hover:bg-indigo-50/30 transition-colors cursor-pointer',
-                        isTodayDay && 'bg-indigo-50/10',
-                        isSleepZone && 'bg-slate-800/5 border-slate-300',
-                        isPeakEnergy && !isSleepZone && 'bg-amber-50/40'
-                      )}
-                    >
-                      {/* Indicador de zona de sueño */}
-                      {isSleepZone && hour === sleepZones[0] && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                          <div className="bg-slate-700/80 text-white px-3 py-1 rounded-full text-xs font-medium shadow-sm">
-                            💤 Sueño Recomendado
+            {/* Columnas de Días (CAPA 0 - Base) */}
+            {weekDays.map((day, dayIdx) => {
+              const isTodayDay = isToday(day);
+              
+              return (
+                <div
+                  key={dayIdx}
+                  className={cn(
+                    'relative border-r border-gray-200 pointer-events-none',
+                    isTodayDay && 'bg-indigo-50/10'
+                  )}
+                  style={{
+                    height: `${hours.length * HOUR_HEIGHT}px`,
+                  }}
+                >
+                  {/* Capa de Líneas (Grid Background) - z-0 */}
+                  <div 
+                    className="absolute left-0 right-0 z-0 pointer-events-none"
+                    style={{
+                      top: 0,
+                      height: '100%',
+                      backgroundImage: 'linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)',
+                      backgroundSize: `100% ${HOUR_HEIGHT}px`,
+                      backgroundPosition: '0 0',
+                    }}
+                  />
+
+                  {/* CAPA 1: Zonas de Sueño y Energía (z-10) */}
+                  {hours.map((hour) => {
+                    const isSleepZone = sleepZones?.includes(hour);
+                    const isPeakEnergy = peakEnergyZones?.includes(hour);
+                    
+                    if (!isSleepZone && !isPeakEnergy) return null;
+                    
+                    return (
+                      <div
+                        key={hour}
+                        className={cn(
+                          'absolute left-0 right-0 z-10 pointer-events-none',
+                          isSleepZone && 'bg-slate-800/5',
+                          isPeakEnergy && !isSleepZone && 'bg-amber-50/40'
+                        )}
+                        style={{
+                          top: `${hour * HOUR_HEIGHT}px`,
+                          height: `${HOUR_HEIGHT}px`,
+                        }}
+                      >
+                        {/* Indicador de zona de sueño */}
+                        {isSleepZone && hour === sleepZones[0] && (
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="bg-slate-700/80 text-white px-3 py-1 rounded-full text-xs font-medium shadow-sm">
+                              💤 Sueño Recomendado
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      
-                      {/* Indicador de pico de energía */}
-                      {isPeakEnergy && !isSleepZone && hour === peakEnergyZones[0] && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                          <div className="bg-amber-500/90 text-white px-3 py-1 rounded-full text-xs font-medium shadow-sm">
-                            ⚡ Pico de Energía
+                        )}
+                        
+                        {/* Indicador de pico de energía */}
+                        {isPeakEnergy && !isSleepZone && hour === peakEnergyZones[0] && (
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="bg-amber-500/90 text-white px-3 py-1 rounded-full text-xs font-medium shadow-sm">
+                              ⚡ Pico de Energía
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      
-                      {/* Pattern de rayas para zona de sueño */}
-                      {isSleepZone && (
-                        <div 
-                          className="absolute inset-0 z-0 pointer-events-none"
-                          style={{
-                            backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(51, 65, 85, 0.03) 10px, rgba(51, 65, 85, 0.03) 20px)'
-                          }}
-                        />
-                      )}
-                      
-                      {/* Pattern sutil para zona de energía */}
-                      {isPeakEnergy && !isSleepZone && (
-                        <div 
-                          className="absolute inset-0 z-0 pointer-events-none"
-                          style={{
-                            backgroundImage: 'repeating-linear-gradient(135deg, transparent, transparent 15px, rgba(251, 191, 36, 0.05) 15px, rgba(251, 191, 36, 0.05) 30px)'
-                          }}
-                        />
-                      )}
-                      
-                      {/* Renderizar eventos solo en la primera celda del día */}
-                      {hour === hours[0] && dayEvents.map(event => {
-                        const style = calculateEventStyle(event.startTime, event.endTime);
-                        return (
-                          <EventCard
-                            key={event.id}
-                            event={event}
-                            style={style}
-                            onConfirm={confirmSuggestion}
-                            onDelete={deleteEvent}
+                        )}
+                        
+                        {/* Pattern de rayas para zona de sueño */}
+                        {isSleepZone && (
+                          <div 
+                            className="absolute inset-0 pointer-events-none"
+                            style={{
+                              backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(51, 65, 85, 0.03) 10px, rgba(51, 65, 85, 0.03) 20px)'
+                            }}
                           />
-                        );
-                      })}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+                        )}
+                        
+                        {/* Pattern sutil para zona de energía */}
+                        {isPeakEnergy && !isSleepZone && (
+                          <div 
+                            className="absolute inset-0 pointer-events-none"
+                            style={{
+                              backgroundImage: 'repeating-linear-gradient(135deg, transparent, transparent 15px, rgba(251, 191, 36, 0.05) 15px, rgba(251, 191, 36, 0.05) 30px)'
+                            }}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* CAPA 2: Línea de Tiempo Actual (z-30) */}
+          <CurrentTimeLine />
+
+          {/* CAPA 3: Eventos (z-20) - Con pointer-events-auto */}
+          <div className="absolute pointer-events-none" style={{ 
+            top: `${HOUR_HEIGHT}px`, 
+            left: '60px',
+            right: 0,
+            height: `${hours.length * HOUR_HEIGHT}px`,
+          }}>
+            {events.map(event => {
+              const dayIdx = getEventDayIndex(event.startTime, weekDays);
+              if (dayIdx === -1) return null;
+
+              const style = calculateEventStyle(event.startTime, event.endTime);
+
+              return (
+                <div
+                  key={event.id}
+                  className="absolute pointer-events-auto z-20"
+                  style={{
+                    left: `calc(${dayIdx} * (100% / 7))`,
+                    width: `calc(100% / 7)`,
+                    top: `${style.top}px`,
+                    height: `${style.height}px`,
+                  }}
+                >
+                  <EventCard
+                    event={event}
+                    style={{ top: 0, height: style.height }}
+                    onConfirm={confirmSuggestion}
+                    onDelete={deleteEvent}
+                    onEdit={onEditEvent}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
