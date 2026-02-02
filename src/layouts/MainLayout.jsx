@@ -1,14 +1,25 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { Calendar, Moon, BookOpen, User } from 'lucide-react';
+import { Calendar, Moon, BookOpen, User, LogOut } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useAuth } from '../features/auth/context/AuthContext';
 
 export default function MainLayout() {
+  const { user, logout } = useAuth();
+  
   const navItems = [
     { to: '/calendar', label: 'Calendario', icon: Calendar },
     { to: '/sleep', label: 'Sueño', icon: Moon },
     { to: '/study', label: 'Estudio', icon: BookOpen },
     { to: '/profile', label: 'Perfil', icon: User },
   ];
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
+  };
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -42,6 +53,37 @@ export default function MainLayout() {
             );
           })}
         </nav>
+
+        {/* User Info & Logout */}
+        <div className="p-4 border-t border-gray-200 space-y-3">
+          {/* User Info */}
+          {user && (
+            <div className="flex items-center gap-3 px-2">
+              <img 
+                src={user.photoURL || 'https://via.placeholder.com/40'} 
+                alt="Avatar" 
+                className="w-10 h-10 rounded-full border-2 border-indigo-200"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-700 truncate">
+                  {user.displayName || 'Usuario'}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {user.email}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Logout Button */}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-red-600 hover:bg-red-50"
+          >
+            <LogOut className="w-5 h-5" />
+            <span className="font-medium">Cerrar Sesión</span>
+          </button>
+        </div>
 
         {/* Footer */}
         <div className="p-4 border-t border-gray-200">
