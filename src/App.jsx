@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './features/auth/context/AuthContext';
 import MainLayout from './layouts/MainLayout';
 import CalendarPage from './features/calendar/pages/CalendarPage';
 import LoginPage from './features/auth/pages/LoginPage';
+import ProfilePage from './features/profile/pages/ProfilePage';
 
 // Componente para proteger rutas privadas
 function PrivateRoute({ children }) {
@@ -63,14 +64,7 @@ function StudyPage() {
   );
 }
 
-function ProfilePage() {
-  return (
-    <div className="text-center py-20">
-      <h2 className="text-2xl font-bold text-gray-800">👤 Perfil de Usuario</h2>
-      <p className="text-gray-500 mt-2">Configuración de cronotipo y preferencias</p>
-    </div>
-  );
-}
+
 
 function App() {
   return (
