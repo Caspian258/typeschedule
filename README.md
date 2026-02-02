@@ -69,6 +69,7 @@ TimeWeave es una aplicación web que analiza tu **cronotipo** (León, Oso, Lobo,
    VITE_FIREBASE_STORAGE_BUCKET=tu_proyecto.appspot.com
    VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
    VITE_FIREBASE_APP_ID=1:123456789:web:abc123
+   VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
    ```
    
    > 📝 **Nota**: Estos valores se obtienen de la consola de Firebase → Project Settings → General → Your apps → SDK setup and configuration
