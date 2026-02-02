@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/features/auth/context/AuthContext';
-import { addEvent, subscribeToUserEvents, validateEventData } from '../services/eventsService';
+import { 
+  addEvent, 
+  subscribeToUserEvents, 
+  validateEventData,
+  deleteEvent as deleteEventService,
+  updateEvent as updateEventService
+} from '../services/eventsService';
 
 /**
  * Custom Hook para gestionar eventos del usuario
@@ -70,11 +76,77 @@ export function useEvents() {
     }
   };
 
+  /**
+   * Elimina un evento
+   */
+  const deleteEvent = async (eventId) => {
+    try {
+      if (!user?.uid) {
+        throw new Error('Usuario no autenticado');
+      }
+
+      setError(null);
+      await deleteEventService(eventId);
+    } catch (err) {
+      const errorMessage = err.message || 'Error al eliminar evento';
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
+  /**
+   * Actualiza un evento existente
+   */
+  const updateEvent = async (eventId, updates) => {
+    try {
+      if (!user?.uid) {
+        throw new Error('Usuario no autenticado');
+      }
+
+      setError(null);
+      await updateEventService(eventId, updates);
+    } catch (err) {
+      const errorMessage = err.message || 'Error al actualizar evento';
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
+  /**
+   * Confirma una sugerencia convirtiéndola en evento real
+   */
+  const confirmSuggestion = async (eventId) => {
+    try {
+      if (!user?.uid) {
+        throw new Error('Usuario no autenticado');
+      }
+
+      setError(null);
+      await updateEventService(eventId, {
+        isTentative: false,
+        type: 'study',
+        status: 'confirmed',
+        isFixed: true
+      });
+
+      if (import.meta.env.DEV) {
+        console.log('✅ Sugerencia confirmada:', eventId);
+      }
+    } catch (err) {
+      const errorMessage = err.message || 'Error al confirmar sugerencia';
+      setError(errorMessage);
+      throw err;
+    }
+  };
+
   return {
     events,
     loading,
     error,
     createEvent,
+    deleteEvent,
+    updateEvent,
+    confirmSuggestion,
   };
 }
 

@@ -2,6 +2,7 @@ import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import WeeklyView from '../components/WeeklyView';
 import AddEventModal from '../components/AddEventModal';
+import CalendarControls from '../components/CalendarControls';
 import { useEvents } from '@/features/events/hooks/useEvents';
 
 export default function CalendarPage() {
@@ -28,13 +29,19 @@ export default function CalendarPage() {
             Vista semanal con bloques fijos y flexibles
           </p>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition shadow-sm"
-        >
-          <Plus className="w-5 h-5" />
-          <span className="font-medium">Nuevo Evento</span>
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Botón de Auto-Agendado */}
+          <CalendarControls />
+          
+          {/* Botón de Nuevo Evento */}
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition shadow-sm"
+          >
+            <Plus className="w-5 h-5" />
+            <span className="font-medium">Nuevo Evento</span>
+          </button>
+        </div>
       </div>
 
       {/* Loading State */}

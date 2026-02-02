@@ -5,7 +5,10 @@ import {
   query, 
   where,
   orderBy,
-  Timestamp 
+  Timestamp,
+  deleteDoc,
+  doc,
+  updateDoc
 } from 'firebase/firestore';
 import { db } from '@/services/firebase/config';
 
@@ -145,4 +148,56 @@ export function validateEventData(eventData) {
     isValid: errors.length === 0,
     errors,
   };
+}
+
+/**
+ * Elimina un evento de Firestore
+ * 
+ * @param {string} eventId - ID del evento a eliminar
+ * @returns {Promise<void>}
+ */
+export async function deleteEvent(eventId) {
+  try {
+    await deleteDoc(doc(db, 'events', eventId));
+    
+    if (import.meta.env.DEV) {
+      console.log('✅ Evento eliminado:', eventId);
+    }
+  } catch (error) {
+    console.error('❌ Error al eliminar evento:', error);
+    throw error;
+  }
+}
+
+/**
+ * Actualiza un evento existente en Firestore
+ * 
+ * @param {string} eventId - ID del evento a actualizar
+ * @param {Object} updates - Datos a actualizar
+ * @returns {Promise<void>}
+ */
+export async function updateEvent(eventId, updates) {
+  try {
+    const updateData = {
+      ...updates,
+      updatedAt: Timestamp.now(),
+    };
+
+    // Convertir fechas si están presentes
+    if (updates.startTime) {
+      updateData.startTime = dateToTimestamp(updates.startTime);
+    }
+    if (updates.endTime) {
+      updateData.endTime = dateToTimestamp(updates.endTime);
+    }
+
+    await updateDoc(doc(db, 'events', eventId), updateData);
+    
+    if (import.meta.env.DEV) {
+      console.log('✅ Evento actualizado:', eventId);
+    }
+  } catch (error) {
+    console.error('❌ Error al actualizar evento:', error);
+    throw error;
+  }
 }

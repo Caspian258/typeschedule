@@ -7,28 +7,55 @@ import {
   setHours,
   setMinutes
 } from 'date-fns';
+import { useEffect, useRef } from 'react';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import EventCard from './EventCard';
 import { calculateEventStyle, getEventDayIndex } from '../utils/gridHelpers';
 import { useProfile } from '@/features/profile/hooks/useProfile';
 import { calculateBedtime } from '@/features/profile/services/profileService';
+import { useEvents } from '@/features/events/hooks/useEvents';
 
 export default function WeeklyView({ events = [] }) {
   const { profile } = useProfile();
+  const { confirmSuggestion, deleteEvent } = useEvents();
+  const scrollContainerRef = useRef(null);
   
   // Generar los 7 días de la semana actual (empezando el lunes)
   const today = new Date();
   const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // 1 = lunes
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
-  // Generar las horas del día (05:00 - 23:00)
-  const hours = Array.from({ length: 19 }, (_, i) => i + 5); // 5 a 23
+  // Generar las horas del día (00:00 - 23:00) - Formato 24h
+  const hours = Array.from({ length: 24 }, (_, i) => i); // 0 a 23
 
   // Calcular zonas de sueño si el perfil está configurado
   const sleepZones = profile?.wakeupTime && profile?.sleepDuration
     ? calculateSleepZones(profile.wakeupTime, profile.sleepDuration, hours)
     : null;
+
+  // Calcular picos de energía según cronotipo
+  const peakEnergyZones = profile?.chronotype
+    ? getPeakEnergyHours(profile.chronotype)
+    : null;
+
+  // Scroll automático a la hora de despertar (o 7:00 por defecto)
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      const wakeHour = profile?.wakeupTime 
+        ? parseInt(profile.wakeupTime.split(':')[0]) 
+        : 7;
+      
+      // Calcular posición de scroll (64px por hora)
+      const scrollPosition = wakeHour * 64;
+      
+      // Scroll suave a la posición
+      scrollContainerRef.current.scrollTo({
+        top: scrollPosition,
+        behavior: 'smooth'
+      });
+    }
+  }, []); // Solo al montar el componente
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -54,7 +81,7 @@ export default function WeeklyView({ events = [] }) {
       </div>
 
       {/* Calendar Grid */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-200px)]" ref={scrollContainerRef}>
         <div className="min-w-[800px]">
           {/* Grid Container */}
           <div 
@@ -120,6 +147,7 @@ export default function WeeklyView({ events = [] }) {
                   });
                   
                   const isSleepZone = sleepZones?.includes(hour);
+                  const isPeakEnergy = peakEnergyZones?.includes(hour);
                   
                   return (
                     <div
@@ -128,7 +156,8 @@ export default function WeeklyView({ events = [] }) {
                         'border-r border-b border-gray-200 relative z-0',
                         'hover:bg-indigo-50/30 transition-colors cursor-pointer',
                         isTodayDay && 'bg-indigo-50/10',
-                        isSleepZone && 'bg-slate-800/5 border-slate-300'
+                        isSleepZone && 'bg-slate-800/5 border-slate-300',
+                        isPeakEnergy && !isSleepZone && 'bg-amber-50/40'
                       )}
                     >
                       {/* Indicador de zona de sueño */}
@@ -136,6 +165,15 @@ export default function WeeklyView({ events = [] }) {
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
                           <div className="bg-slate-700/80 text-white px-3 py-1 rounded-full text-xs font-medium shadow-sm">
                             💤 Sueño Recomendado
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Indicador de pico de energía */}
+                      {isPeakEnergy && !isSleepZone && hour === peakEnergyZones[0] && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                          <div className="bg-amber-500/90 text-white px-3 py-1 rounded-full text-xs font-medium shadow-sm">
+                            ⚡ Pico de Energía
                           </div>
                         </div>
                       )}
@@ -150,6 +188,16 @@ export default function WeeklyView({ events = [] }) {
                         />
                       )}
                       
+                      {/* Pattern sutil para zona de energía */}
+                      {isPeakEnergy && !isSleepZone && (
+                        <div 
+                          className="absolute inset-0 z-0 pointer-events-none"
+                          style={{
+                            backgroundImage: 'repeating-linear-gradient(135deg, transparent, transparent 15px, rgba(251, 191, 36, 0.05) 15px, rgba(251, 191, 36, 0.05) 30px)'
+                          }}
+                        />
+                      )}
+                      
                       {/* Renderizar eventos solo en la primera celda del día */}
                       {hour === hours[0] && dayEvents.map(event => {
                         const style = calculateEventStyle(event.startTime, event.endTime);
@@ -158,6 +206,8 @@ export default function WeeklyView({ events = [] }) {
                             key={event.id}
                             event={event}
                             style={style}
+                            onConfirm={confirmSuggestion}
+                            onDelete={deleteEvent}
                           />
                         );
                       })}
@@ -175,6 +225,7 @@ export default function WeeklyView({ events = [] }) {
         <p className="text-xs text-gray-500">
           📊 <strong>{events.length}</strong> eventos esta semana
           {sleepZones && ' | 💤 Zonas de sueño configuradas'}
+          {peakEnergyZones && ' | ⚡ Picos de energía visualizados'}
           {' | 💡 Click en "Nuevo Evento" para agregar más'}
         </p>
       </div>
@@ -195,13 +246,13 @@ function calculateSleepZones(wakeupTime, sleepDuration, hours) {
   const sleepHours = [];
 
   // Si el sueño cruza la medianoche (ej: 23:00 a 07:00)
-  if (bedHour > wakeHour || bedHour < 5) {
+  if (bedHour > wakeHour) {
     // Desde bedHour hasta 23:59
     for (let h = bedHour; h <= 23; h++) {
       if (hours.includes(h)) sleepHours.push(h);
     }
     // Desde 00:00 hasta wakeHour
-    for (let h = 5; h < wakeHour; h++) {
+    for (let h = 0; h < wakeHour; h++) {
       if (hours.includes(h)) sleepHours.push(h);
     }
   } else {
@@ -212,4 +263,18 @@ function calculateSleepZones(wakeupTime, sleepDuration, hours) {
   }
 
   return sleepHours;
+}
+
+/**
+ * Obtiene las horas de pico de energía según el cronotipo
+ */
+function getPeakEnergyHours(chronotype) {
+  const peakRanges = {
+    lion: [8, 9, 10, 11],      // 08:00 - 12:00
+    bear: [10, 11, 12, 13],    // 10:00 - 14:00
+    wolf: [16, 17, 18, 19, 20], // 16:00 - 21:00
+    dolphin: [10, 11],          // 10:00 - 12:00
+  };
+
+  return peakRanges[chronotype] || null;
 }
