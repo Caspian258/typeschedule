@@ -7,16 +7,43 @@ import { useEvents } from '@/features/events/hooks/useEvents';
 
 export default function CalendarPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { events, loading, error, createEvent } = useEvents();
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const { events, loading, error, createEvent, updateEvent, deleteEvent } = useEvents();
 
-  const handleCreateEvent = async (eventData) => {
+  const handleCreateOrUpdateEvent = async (eventData, eventId) => {
     try {
-      await createEvent(eventData);
-      // El modal se cierra automáticamente en AddEventModal tras el éxito
+      if (eventId) {
+        // Actualizar evento existente
+        await updateEvent(eventId, eventData);
+      } else {
+        // Crear nuevo evento
+        await createEvent(eventData);
+      }
+      setSelectedEvent(null);
     } catch (error) {
-      console.error('Error al crear evento:', error);
-      // El error ya se maneja en el modal
+      console.error('Error al guardar evento:', error);
+      throw error;
     }
+  };
+
+  const handleEditEvent = (event) => {
+    setSelectedEvent(event);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteEvent = async (eventId) => {
+    try {
+      await deleteEvent(eventId);
+      setSelectedEvent(null);
+    } catch (error) {
+      console.error('Error al eliminar evento:', error);
+      throw error;
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedEvent(null);
   };
 
   return (
@@ -62,7 +89,7 @@ export default function CalendarPage() {
       )}
 
       {/* Weekly Calendar View */}
-      {!loading && <WeeklyView events={events} />}
+      {!loading && <WeeklyView events={events} onEditEvent={handleEditEvent} />}
 
       {/* Info Banner */}
       <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
@@ -81,11 +108,13 @@ export default function CalendarPage() {
         <Plus className="w-8 h-8" />
       </button>
 
-      {/* Add Event Modal */}
+      {/* Add/Edit Event Modal */}
       <AddEventModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleCreateEvent}
+        onClose={handleCloseModal}
+        onSave={handleCreateOrUpdateEvent}
+        onDelete={handleDeleteEvent}
+        eventToEdit={selectedEvent}
       />
     </div>
   );

@@ -3,7 +3,7 @@ import { EVENT_STYLES } from '@/features/events/types';
 import { formatEventTime } from '../utils/gridHelpers';
 import { Check, X } from 'lucide-react';
 
-export default function EventCard({ event, style, onConfirm, onDelete }) {
+export default function EventCard({ event, style, onConfirm, onDelete, onEdit }) {
   const eventStyle = EVENT_STYLES[event.type] || EVENT_STYLES.personal;
   
   // Determinar si es un evento pequeño (menos de 45 minutos)
@@ -15,8 +15,11 @@ export default function EventCard({ event, style, onConfirm, onDelete }) {
 
   // Manejar confirmación de evento tentativo
   const handleConfirm = async (e) => {
-    e.stopPropagation();
     e.preventDefault();
+    e.stopPropagation();
+    if (e.nativeEvent) {
+      e.nativeEvent.stopImmediatePropagation();
+    }
     
     if (onConfirm && event.id) {
       try {
@@ -29,8 +32,11 @@ export default function EventCard({ event, style, onConfirm, onDelete }) {
 
   // Manejar eliminación de evento tentativo
   const handleDelete = async (e) => {
-    e.stopPropagation();
     e.preventDefault();
+    e.stopPropagation();
+    if (e.nativeEvent) {
+      e.nativeEvent.stopImmediatePropagation();
+    }
     
     if (onDelete && event.id) {
       try {
@@ -41,8 +47,20 @@ export default function EventCard({ event, style, onConfirm, onDelete }) {
     }
   };
 
+  // Manejar clic en la tarjeta para editar
+  const handleCardClick = (e) => {
+    // Solo abrir modal de edición si no se hizo clic en un botón
+    if (e.target.closest('button')) {
+      return;
+    }
+    if (onEdit) {
+      onEdit(event);
+    }
+  };
+
   return (
     <div
+      onClick={handleCardClick}
       className={cn(
         'absolute inset-x-1 rounded-lg border-l-4 shadow-sm z-10',
         'overflow-hidden cursor-pointer transition-all',
@@ -53,6 +71,7 @@ export default function EventCard({ event, style, onConfirm, onDelete }) {
         isTentative && 'border-dashed opacity-80 bg-opacity-50'
       )}
       style={{
+        position: 'relative',
         top: `${style.top}px`,
         height: `${style.height}px`,
       }}
@@ -71,20 +90,22 @@ export default function EventCard({ event, style, onConfirm, onDelete }) {
 
           {/* Botones de acción para eventos tentativos (solo si no es pequeño) */}
           {isTentative && !isSmallEvent && (
-            <div className="flex items-center gap-1 ml-auto z-20 relative">
+            <div className="flex items-center gap-1 ml-auto z-50 relative pointer-events-auto">
               <button
                 onClick={handleConfirm}
-                className="p-1 rounded hover:bg-green-200 transition-colors cursor-pointer z-20"
+                className="p-1 rounded hover:bg-green-200 hover:scale-110 transition-all cursor-pointer z-50 relative pointer-events-auto"
                 title="Confirmar evento"
+                type="button"
               >
-                <Check className="w-3 h-3 text-green-600" />
+                <Check className="w-3 h-3 text-green-600 pointer-events-none" />
               </button>
               <button
                 onClick={handleDelete}
-                className="p-1 rounded hover:bg-red-200 transition-colors cursor-pointer z-20"
+                className="p-1 rounded hover:bg-red-200 hover:scale-110 transition-all cursor-pointer z-50 relative pointer-events-auto"
                 title="Eliminar evento"
+                type="button"
               >
-                <X className="w-3 h-3 text-red-600" />
+                <X className="w-3 h-3 text-red-600 pointer-events-none" />
               </button>
             </div>
           )}
@@ -128,20 +149,22 @@ export default function EventCard({ event, style, onConfirm, onDelete }) {
             {formatEventTime(event.startTime)}
           </div>
           {isTentative && (
-            <div className="flex gap-0.5 z-20 relative">
+            <div className="flex gap-0.5 z-50 relative pointer-events-auto">
               <button
                 onClick={handleConfirm}
-                className="p-0.5 rounded hover:bg-green-200 cursor-pointer z-20"
+                className="p-0.5 rounded hover:bg-green-200 hover:scale-110 transition-all cursor-pointer z-50 relative pointer-events-auto"
                 title="Confirmar"
+                type="button"
               >
-                <Check className="w-2.5 h-2.5 text-green-600" />
+                <Check className="w-2.5 h-2.5 text-green-600 pointer-events-none" />
               </button>
               <button
                 onClick={handleDelete}
-                className="p-0.5 rounded hover:bg-red-200 cursor-pointer z-20"
+                className="p-0.5 rounded hover:bg-red-200 hover:scale-110 transition-all cursor-pointer z-50 relative pointer-events-auto"
                 title="Eliminar"
+                type="button"
               >
-                <X className="w-2.5 h-2.5 text-red-600" />
+                <X className="w-2.5 h-2.5 text-red-600 pointer-events-none" />
               </button>
             </div>
           )}

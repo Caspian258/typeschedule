@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EVENT_STYLES } from '@/features/events/types';
-import { startOfWeek, addDays, setHours, setMinutes, format } from 'date-fns';
+import { startOfWeek, addDays, setHours, setMinutes, format, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-export default function AddEventModal({ isOpen, onClose, onSave }) {
+export default function AddEventModal({ isOpen, onClose, onSave, onDelete, eventToEdit }) {
   const [formData, setFormData] = useState({
     title: '',
     type: 'study',
@@ -17,6 +17,35 @@ export default function AddEventModal({ isOpen, onClose, onSave }) {
 
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
+  const isEditMode = !!eventToEdit;
+
+  // Pre-llenar formulario cuando se edita un evento
+  useEffect(() => {
+    if (eventToEdit) {
+      const startDate = new Date(eventToEdit.startTime);
+      const endDate = new Date(eventToEdit.endTime);
+      
+      setFormData({
+        title: eventToEdit.title,
+        type: eventToEdit.type,
+        dayOfWeek: getDay(startDate),
+        startTime: format(startDate, 'HH:mm'),
+        endTime: format(endDate, 'HH:mm'),
+        isFixed: eventToEdit.isFixed || false,
+      });
+    } else {
+      // Resetear formulario cuando no hay evento
+      setFormData({
+        title: '',
+        type: 'study',
+        dayOfWeek: 1,
+        startTime: '09:00',
+        endTime: '10:00',
+        isFixed: true,
+      });
+    }
+    setError(null);
+  }, [eventToEdit, isOpen]);
 
   const eventTypes = [
     { value: 'class', label: '📚 Clase' },
@@ -78,22 +107,34 @@ export default function AddEventModal({ isOpen, onClose, onSave }) {
         isRecurring: false,
       };
 
-      await onSave(eventData);
+      // Si estamos editando, pasar el ID
+      if (isEditMode && eventToEdit.id) {
+        await onSave(eventData, eventToEdit.id);
+      } else {
+        await onSave(eventData);
+      }
 
-      // Reset form y cerrar
-      setFormData({
-        title: '',
-        type: 'study',
-        dayOfWeek: 1,
-        startTime: '09:00',
-        endTime: '10:00',
-        isFixed: true,
-      });
       onClose();
     } catch (err) {
       setError(err.message || 'Error al guardar el evento');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!eventToEdit?.id || !onDelete) return;
+    
+    if (window.confirm('¿Estás seguro de que quieres eliminar este evento?')) {
+      try {
+        setIsSaving(true);
+        await onDelete(eventToEdit.id);
+        onClose();
+      } catch (err) {
+        setError(err.message || 'Error al eliminar el evento');
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -104,7 +145,9 @@ export default function AddEventModal({ isOpen, onClose, onSave }) {
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-slide-up">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-800">Nuevo Evento</h2>
+          <h2 className="text-2xl font-bold text-gray-800">
+            {isEditMode ? 'Editar Evento' : 'Nuevo Evento'}
+          </h2>
           <button
             onClick={onClose}
             className="p-2 rounded-lg hover:bg-gray-100 transition"
@@ -217,6 +260,17 @@ export default function AddEventModal({ isOpen, onClose, onSave }) {
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">
+            {isEditMode && onDelete && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={isSaving}
+                className="px-4 py-3 border border-red-300 rounded-lg font-medium text-red-600 hover:bg-red-50 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Eliminar
+              </button>
+            )}
             <button
               type="button"
               onClick={onClose}
@@ -229,7 +283,7 @@ export default function AddEventModal({ isOpen, onClose, onSave }) {
               disabled={isSaving}
               className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSaving ? 'Guardando...' : 'Guardar Evento'}
+              {isSaving ? 'Guardando...' : (isEditMode ? 'Actualizar' : 'Guardar Evento')}
             </button>
           </div>
         </form>
