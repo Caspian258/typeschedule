@@ -1,4 +1,4 @@
-# TimeWeave - Optimizador Biológico para Estudiantes
+# typeschedule - Optimizador Biológico para Estudiantes
 
 > **v1.0.0 Alpha** - MVP Completo
 
@@ -6,9 +6,9 @@ Un calendario inteligente que sincroniza tu agenda académica con tus ritmos bio
 
 ---
 
-## ¿Qué es TimeWeave?
+## ¿Qué es typeschedule?
 
-TimeWeave es una aplicación web que analiza tu **cronotipo** (León, Oso, Lobo, Delfín) y genera automáticamente sugerencias de estudio optimizadas para tus momentos de mayor energía mental. Basado en ciencia del sueño y ritmos ultradianos, te ayuda a estudiar más inteligentemente, no más duro.
+typeschedule es una aplicación web que analiza tu **cronotipo** (León, Oso, Lobo, Delfín) y genera automáticamente sugerencias de estudio optimizadas para tus momentos de mayor energía mental. Basado en ciencia del sueño y ritmos ultradianos, te ayuda a estudiar más inteligentemente, no más duro.
 
 ### Features Clave
 
